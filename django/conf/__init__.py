@@ -15,6 +15,10 @@ from pathlib import Path
 
 import django
 from django.conf import global_settings
+from django.conf.connection_config import (
+    connection_config_settings,
+    get_connection_configs,
+)
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.deprecation import RemovedInDjango50Warning
 from django.utils.functional import LazyObject, empty
@@ -207,6 +211,10 @@ class Settings:
                     raise ImproperlyConfigured(
                         "The %s setting must be a list or a tuple." % setting
                     )
+
+                if setting in connection_config_settings:
+                    setting_value = get_connection_configs(setting, setting_value)
+
                 setattr(self, setting, setting_value)
                 self._explicit_settings.add(setting)
 

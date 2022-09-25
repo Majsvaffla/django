@@ -200,6 +200,16 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     ops_class = DatabaseOperations
     validation_class = DatabaseValidation
 
+    @classmethod
+    def connection_config_from_url(cls, engine, url):
+        config = super().connection_config_from_url(engine, url)
+
+        if 'ssl-ca' in config['OPTIONS']:
+            ssl_ca = config['OPTIONS'].pop('ssl-ca')
+            config['OPTIONS']['ssl'] = {'ca': ssl_ca}
+
+        return config
+
     def get_database_version(self):
         return self.mysql_version
 

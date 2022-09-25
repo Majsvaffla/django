@@ -17,6 +17,20 @@ class FileBasedCache(BaseCache):
     cache_suffix = ".djcache"
     pickle_protocol = pickle.HIGHEST_PROTOCOL
 
+    @classmethod
+    def connection_config_from_url(cls, backend, url):
+        config = super().connection_config_from_url(backend, url)
+
+        path = '/' + config['path']
+
+        # On windows a path like C:/a/b is parsed with C as the hostname
+        # and a/b/ as the path. Reconstruct the windows path here.
+        if config['hostname']:
+            path = '{0}:{1}'.format(config['hostname'], path)
+
+        config['LOCATION'] = path
+        return config
+
     def __init__(self, dir, params):
         super().__init__(params)
         self._dir = os.path.abspath(dir)

@@ -142,6 +142,17 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     introspection_class = DatabaseIntrospection
     ops_class = DatabaseOperations
 
+    @classmethod
+    def connection_config_from_url(cls, engine, url):
+        # These special URLs cannot be parsed correctly.
+        if url in (':memory:', ''):
+            return {
+                'ENGINE': engine,
+                'NAME': ':memory:'
+            }
+        return super().connection_config_from_url(engine, url)
+
+
     def get_connection_params(self):
         settings_dict = self.settings_dict
         if not settings_dict["NAME"]:

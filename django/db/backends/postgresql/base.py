@@ -158,6 +158,21 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     # PostgreSQL backend-specific attributes.
     _named_cursor_idx = 0
 
+    @classmethod
+    def connection_config_from_url(cls, engine, url):
+        config = super().connection_config_from_url(engine, url)
+        host = config['hostname']
+
+        # Handle postgres percent-encoded paths.
+        if '%2f' in host.lower():
+            config['hostname'] = config.unquote(host)
+
+        if 'currentSchema' in config['OPTIONS']:
+            current_schema = config['OPTIONS'].pop('currentSchema')
+            config['OPTIONS']['options'] = '-c search_path={0}'.format(current_schema)
+
+        return config
+
     def get_database_version(self):
         """
         Return a tuple of the database's version.

@@ -4,6 +4,7 @@ import warnings
 
 from asgiref.sync import sync_to_async
 
+from django.conf.connection_config import parse_connection_url
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
 
@@ -55,6 +56,25 @@ def get_key_func(key_func):
 
 class BaseCache:
     _missing_key = object()
+
+    @classmethod
+    def connection_config_from_url(cls, backend, url):
+        config = parse_connection_url(url)
+        returner = {
+            'BACKEND': backend
+        }
+        if config['hostname']:
+            returner['LOCATION'] = config['hostname']
+            if config['port']:
+                returner['LOCATION'] += ':%s' % config['port']
+
+        for key in ('timeout', 'key_prefix', 'version'):
+            if key in config['params']:
+                timeout = config['params'].pop(key)
+                returner[key.upper()] = timeout
+
+        returner['OPTIONS'] = config['params']
+        return returner
 
     def __init__(self, params):
         timeout = params.get("timeout", params.get("TIMEOUT", 300))

@@ -239,6 +239,13 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         )
         self.features.can_return_columns_from_insert = use_returning_into
 
+    @classmethod
+    def connection_config_from_url(cls, engine, url):
+        config = super().connection_config_from_url(engine, url)
+        # Oracle requires string ports
+        config['PORT'] = str(config['PORT'])
+        return config
+
     def get_database_version(self):
         return self.oracle_version
 

@@ -13,6 +13,15 @@ from django.utils.functional import cached_property
 
 
 class BaseMemcachedCache(BaseCache):
+    @classmethod
+    def connection_config_from_url(cls, backend, url):
+        config = super().connection_config_from_url(backend, url)
+
+        if config['path']:
+            # We are dealing with a URI like memcached:///socket/path
+            config['LOCATION'] = '/{0}'.format(config['path'])
+        return config
+
     def __init__(self, server, params, library, value_not_found_exception):
         super().__init__(params)
         if isinstance(server, str):
@@ -143,6 +152,15 @@ class BaseMemcachedCache(BaseCache):
 
 class PyLibMCCache(BaseMemcachedCache):
     "An implementation of a cache binding using pylibmc"
+
+    @classmethod
+    def connection_config_from_url(cls, backend, url):
+        config = super().connection_config_from_url(backend, url)
+        # We are dealing with a URI like memcached://unix:/abc
+        # Set the hostname to be the unix path
+        config['hostname'] = '{0}:/{1}'.format(config['hostname'], config['path'])
+        config['path'] = None
+        return super().connection_config_from_url(backend, config)
 
     def __init__(self, server, params):
         import pylibmc
